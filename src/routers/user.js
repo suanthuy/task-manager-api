@@ -26,8 +26,9 @@ router.post("/users", async (req, res) => {
         // await no need here -->
         sendWelcomeEmail(user.email, user.name);
 
+        const token = await user.generateAuthToken();
         await user.save();
-        res.status(201).send({ user });
+        res.status(201).send({ user, token });
     } catch (err) {
         res.status(400).send(err);
     }
@@ -132,18 +133,16 @@ router.post(
     }
 );
 
-router.get("/users/:id/avatar", async (req, res) => {
+router.get("/users/me/avatar", auth, async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
-
-        if (!user || !user.avatar) {
+        if (!req.user || !req.user.avatar) {
             throw new Error();
         }
 
         // Set the response that return a image
         res.set("Content-Type", "image/png");
 
-        res.send(user.avatar);
+        res.send(req.user.avatar);
     } catch (error) {
         res.status(404).send("Avatar not found");
     }
